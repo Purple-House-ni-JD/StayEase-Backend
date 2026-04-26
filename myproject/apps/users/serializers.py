@@ -48,8 +48,13 @@ class UserProfileSerializer(serializers.ModelSerializer):
             'id', 'email', 'username', 'first_name', 'last_name',
             'phone_number', 'avatar_url', 'role', 'date_joined',
             'has_password', 'linked_providers',
+            'is_staff', 'is_superuser', # <-- ADDED THESE TWO
         ]
-        read_only_fields = ['id', 'email', 'role', 'date_joined', 'has_password', 'linked_providers']
+        read_only_fields = [
+            'id', 'email', 'role', 'date_joined', 
+            'has_password', 'linked_providers',
+            'is_staff', 'is_superuser', # <-- ADDED HERE TOO
+        ]
 
     def get_linked_providers(self, obj):
         return list(obj.oauth_accounts.values_list('provider', flat=True))
