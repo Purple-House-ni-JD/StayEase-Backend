@@ -20,6 +20,10 @@ class User(AbstractUser):
 
     class Meta:
         db_table = 'users'
+        indexes = [
+            models.Index(fields=['email']),
+            models.Index(fields=['role']),
+        ]
 
     def __str__(self):
         return f"{self.get_full_name()} <{self.email}>"
@@ -60,6 +64,10 @@ class OAuthAccount(models.Model):
         db_table = 'oauth_accounts'
         # One account per provider per user
         unique_together = [('provider', 'provider_user_id')]
+        indexes = [
+            models.Index(fields=['user']),
+            models.Index(fields=['provider']),
+        ]
 
     def __str__(self):
         return f"{self.user.email} via {self.provider}"
