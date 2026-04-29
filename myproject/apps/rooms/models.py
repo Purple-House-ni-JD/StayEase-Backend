@@ -51,6 +51,12 @@ class Room(models.Model):
 
     class Meta:
         db_table = 'rooms'
+        indexes = [
+            models.Index(fields=['category', 'availability_status']),
+            models.Index(fields=['price_per_night']),
+            models.Index(fields=['rating']),
+            models.Index(fields=['is_featured', 'created_at']),
+        ]
 
     def __str__(self):
         return f"{self.name} ({self.get_category_display()})"

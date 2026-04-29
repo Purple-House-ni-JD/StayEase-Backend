@@ -28,6 +28,12 @@ class Booking(models.Model):
     class Meta:
         db_table = 'bookings'
         ordering = ['-created_at']
+        indexes = [
+            models.Index(fields=['user', 'created_at']),
+            models.Index(fields=['status', 'created_at']),
+            models.Index(fields=['booking_ref']),
+            models.Index(fields=['check_in', 'check_out']),
+        ]
 
     def __str__(self):
         return f"{self.booking_ref} — {self.user.email}"
@@ -55,3 +61,7 @@ class BookingRoom(models.Model):
 
     class Meta:
         db_table = 'booking_rooms'
+        indexes = [
+            models.Index(fields=['booking']),
+            models.Index(fields=['room']),
+        ]
