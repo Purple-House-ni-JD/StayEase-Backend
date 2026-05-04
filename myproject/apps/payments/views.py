@@ -1,5 +1,5 @@
 from rest_framework import generics
-from rest_framework.permissions import IsAuthenticated
+from rest_framework.permissions import AllowAny, IsAuthenticated
 
 from core.permissions import IsAdmin
 from .models import Payment
@@ -17,6 +17,17 @@ class PaymentDetailView(generics.RetrieveAPIView):
         if user.role == 'admin':
             return Payment.objects.select_related('booking').all()
         return Payment.objects.select_related('booking').filter(booking__user=user)
+
+
+class GuestPaymentDetailView(generics.RetrieveAPIView):
+    """GET /api/v1/payments/guest/{booking_id}/ — Guest access to payment details."""
+    serializer_class = PaymentSerializer
+    permission_classes = [AllowAny]
+    lookup_field = 'booking_id'
+
+    def get_queryset(self):
+        # Only allow access to payments for bookings without a user (guest bookings)
+        return Payment.objects.select_related('booking').filter(booking__user__isnull=True)
 
 
 class PaymentUpdateView(generics.UpdateAPIView):

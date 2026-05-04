@@ -1,5 +1,5 @@
 from rest_framework import generics, status
-from rest_framework.permissions import IsAuthenticated
+from rest_framework.permissions import AllowAny, IsAuthenticated
 from rest_framework.response import Response
 from rest_framework.views import APIView
 
@@ -46,6 +46,22 @@ class BookingCreateView(generics.CreateAPIView):
         serializer = self.get_serializer(data=request.data)
         serializer.is_valid(raise_exception=True)
         booking = serializer.save()
+        return Response(
+            BookingDetailSerializer(booking).data,
+            status=status.HTTP_201_CREATED
+        )
+
+
+class GuestBookingCreateView(generics.CreateAPIView):
+    """POST /api/v1/bookings/guest/create/ — Unauthenticated guest: create a booking."""
+    serializer_class = BookingCreateSerializer
+    permission_classes = [AllowAny]
+
+    def create(self, request, *args, **kwargs):
+        serializer = self.get_serializer(data=request.data)
+        serializer.is_valid(raise_exception=True)
+        # Create booking without user (guest booking)
+        booking = serializer.save(user=None)
         return Response(
             BookingDetailSerializer(booking).data,
             status=status.HTTP_201_CREATED

@@ -14,7 +14,9 @@ class Booking(models.Model):
     user = models.ForeignKey(
         settings.AUTH_USER_MODEL,
         on_delete=models.PROTECT,
-        related_name='bookings'
+        related_name='bookings',
+        null=True,
+        blank=True
     )
     booking_ref = models.CharField(max_length=50, unique=True, editable=False)
     check_in = models.DateField()
@@ -36,7 +38,8 @@ class Booking(models.Model):
         ]
 
     def __str__(self):
-        return f"{self.booking_ref} — {self.user.email}"
+        user_email = self.user.email if self.user else "Guest"
+        return f"{self.booking_ref} — {user_email}"
 
     @property
     def nights(self):

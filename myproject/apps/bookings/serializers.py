@@ -63,6 +63,7 @@ class BookingCreateSerializer(serializers.Serializer):
     check_out = serializers.DateField()
     guest_count = serializers.IntegerField(min_value=1)
     payment_method = serializers.ChoiceField(choices=Payment.METHOD_CHOICES)
+    guest_details = serializers.DictField(required=False, write_only=True)
 
     def validate(self, attrs):
         check_in = attrs['check_in']
@@ -101,11 +102,13 @@ class BookingCreateSerializer(serializers.Serializer):
 
     @transaction.atomic
     def create(self, validated_data):
-        user = self.context['request'].user
+        # Get user from request context (will be None for guest bookings)
+        user = getattr(self.context['request'], 'user', None) if self.context['request'].user.is_authenticated else None
         rooms = validated_data['rooms']
         check_in = validated_data['check_in']
         check_out = validated_data['check_out']
         nights = calculate_nights(check_in, check_out)
+        guest_details = validated_data.pop('guest_details', None)
 
         # Calculate total price
         total_price = sum(room.price_per_night * nights for room in rooms)
@@ -120,6 +123,12 @@ class BookingCreateSerializer(serializers.Serializer):
             total_price=total_price,
             status='pending',
         )
+
+        # Store guest details if provided
+        if guest_details and not user:
+            # You could add guest_details fields to the Booking model if needed
+            # For now, we'll just pass the booking through
+            pass
 
         # Create BookingRoom rows (snapshot price)
         for room in rooms:
