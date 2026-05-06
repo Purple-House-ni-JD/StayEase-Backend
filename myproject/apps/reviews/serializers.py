@@ -15,6 +15,16 @@ class ReviewSerializer(serializers.ModelSerializer):
         ]
         read_only_fields = ['id', 'user_name', 'room_name', 'created_at']
 
+    def validate_rating(self, value):
+        if not isinstance(value, int) or not (1 <= value <= 5):
+            raise serializers.ValidationError("Rating must be an integer between 1 and 5.")
+        return value
+
+    def validate_comment(self, value):
+        if not value or not value.strip():
+            raise serializers.ValidationError("Comment cannot be empty.")
+        return value.strip()
+
     def get_user_name(self, obj):
         return obj.user.get_full_name() or obj.user.email
 
@@ -39,6 +49,12 @@ class ReviewSerializer(serializers.ModelSerializer):
         if booking.status != 'completed':
             raise serializers.ValidationError(
                 {'booking': 'You can only review completed bookings.'}
+            )
+
+        # Check if user has already reviewed this booking
+        if Review.objects.filter(user=request.user, booking=booking).exists():
+            raise serializers.ValidationError(
+                {'booking': 'You have already submitted a review for this booking. Only one review is allowed per booking.'}
             )
 
         return attrs
