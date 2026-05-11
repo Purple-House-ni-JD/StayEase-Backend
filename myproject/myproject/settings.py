@@ -130,11 +130,10 @@ SIMPLE_JWT = {
 }
 
 # --- CORS ---
-# Change this:
-# CORS_ALLOWED_ORIGINS = True
+CORS_ALLOWED_ORIGINS = config('CORS_ALLOWED_ORIGINS', default='').split(',')
 
-# To this:
-CORS_ALLOW_ALL_ORIGINS = True
+# Allow mobile apps (APK/IPA) to access API
+CORS_ALLOW_ALL_ORIGINS = True  # For mobile apps in production
 CORS_ALLOW_CREDENTIALS = True
 
 # --- Caching ---
