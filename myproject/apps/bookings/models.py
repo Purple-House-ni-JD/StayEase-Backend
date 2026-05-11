@@ -21,6 +21,7 @@ class Booking(models.Model):
     booking_ref = models.CharField(max_length=50, unique=True, editable=False)
     check_in = models.DateField()
     check_out = models.DateField()
+    checkout_time = models.TimeField(default="11:00:00", help_text="Checkout time, default 11:00 AM")
     guest_count = models.IntegerField()
     total_price = models.DecimalField(max_digits=10, decimal_places=2)
     status = models.CharField(max_length=10, choices=STATUS_CHOICES, default='pending')

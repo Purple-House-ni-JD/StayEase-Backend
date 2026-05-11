@@ -16,6 +16,9 @@ from .oauth_services import (
     verify_google_token, verify_facebook_token,
     get_or_create_oauth_user,
 )
+from rest_framework import generics, permissions
+from rest_framework import serializers
+from django.contrib.auth import get_user_model
 
 
 # ---------------------------------------------------------------------------
@@ -171,3 +174,21 @@ class FacebookOAuthView(APIView):
 
         user, created = get_or_create_oauth_user('facebook', payload)
         return _jwt_response(user, created=created)
+    
+    User = get_user_model()
+
+# Quick serializer specifically for the admin table
+class AdminUserSerializer(serializers.ModelSerializer):
+    class Meta:
+        model = User
+        fields = ['id', 'email', 'first_name', 'last_name', 'phone_number', 'is_staff', 'is_superuser']
+
+class AdminUserListView(generics.ListAPIView):
+    queryset = User.objects.all().order_by('-id')
+    serializer_class = AdminUserSerializer
+    permission_classes = [permissions.IsAdminUser]
+
+class AdminUserDeleteView(generics.DestroyAPIView):
+    queryset = User.objects.all()
+    serializer_class = AdminUserSerializer
+    permission_classes = [permissions.IsAdminUser]

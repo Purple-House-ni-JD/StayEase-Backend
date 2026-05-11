@@ -85,7 +85,7 @@ DATABASES = {
         'OPTIONS': {
             'connect_timeout': 10,
             'application_name': 'stayease_django',
-            'sslmode': 'require',
+            'sslmode': 'disable',
         }
     }
 }
