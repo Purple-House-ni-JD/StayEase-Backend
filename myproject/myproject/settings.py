@@ -85,7 +85,7 @@ DATABASES = {
         'OPTIONS': {
             'connect_timeout': 10,
             'application_name': 'stayease_django',
-            'sslmode': 'require',
+            'sslmode': 'disable',
         }
     }
 }
@@ -130,7 +130,11 @@ SIMPLE_JWT = {
 }
 
 # --- CORS ---
-CORS_ALLOWED_ORIGINS = config('CORS_ALLOWED_ORIGINS', default='http://localhost:8081').split(',')
+# Change this:
+# CORS_ALLOWED_ORIGINS = True
+
+# To this:
+CORS_ALLOW_ALL_ORIGINS = True
 CORS_ALLOW_CREDENTIALS = True
 
 # --- Caching ---
