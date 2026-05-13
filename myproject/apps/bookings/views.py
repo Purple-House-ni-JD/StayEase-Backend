@@ -2,6 +2,8 @@ from rest_framework import generics, status
 from rest_framework.permissions import AllowAny, IsAuthenticated
 from rest_framework.response import Response
 from rest_framework.views import APIView
+from datetime import date, timedelta
+from apps.bookings.models import BookingRoom
 
 from core.permissions import IsAdmin, IsOwnerOrAdmin
 from .models import Booking
@@ -115,3 +117,22 @@ class BookingCancelView(APIView):
         booking.status = 'cancelled'
         booking.save(update_fields=['status'])
         return Response({'detail': 'Booking cancelled.', 'booking_ref': booking.booking_ref})
+
+class RoomBookedDatesView(APIView):
+    permission_classes = [AllowAny]
+
+    def get(self, request, pk):
+        ranges = BookingRoom.objects.filter(
+            room_id=pk,
+            booking__status__in=['pending', 'confirmed']
+        ).values('booking__check_in', 'booking__check_out')
+
+        booked_dates = set()
+        for r in ranges:
+            current = r['booking__check_in']
+            end = r['booking__check_out']
+            while current < end:
+                booked_dates.add(current.isoformat())
+                current += timedelta(days=1)
+
+        return Response({'booked_dates': sorted(booked_dates)})
