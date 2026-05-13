@@ -4,12 +4,13 @@ from rest_framework.response import Response
 from rest_framework.views import APIView
 from datetime import date, timedelta
 from apps.bookings.models import BookingRoom
+from django.utils import timezone
 
 from core.permissions import IsAdmin, IsOwnerOrAdmin
 from .models import Booking
 from .serializers import (
     BookingListSerializer, BookingDetailSerializer,
-    BookingCreateSerializer, BookingStatusUpdateSerializer,
+    BookingCreateSerializer, BookingStatusUpdateSerializer, BookingCancelSerializer
 )
 
 
@@ -136,3 +137,31 @@ class RoomBookedDatesView(APIView):
                 current += timedelta(days=1)
 
         return Response({'booked_dates': sorted(booked_dates)})
+
+class BookingCancelView(APIView):
+    """POST /api/v1/bookings/{id}/cancel/ — Guest self-cancel with reason."""
+    permission_classes = [IsAuthenticated]
+
+    def post(self, request, pk):
+        try:
+            booking = Booking.objects.get(pk=pk, user=request.user)
+        except Booking.DoesNotExist:
+            return Response({'detail': 'Not found.'}, status=status.HTTP_404_NOT_FOUND)
+
+        serializer = BookingCancelSerializer(booking, data=request.data)
+        if not serializer.is_valid():
+            return Response(serializer.errors, status=status.HTTP_400_BAD_REQUEST)
+
+        # Update booking with cancellation details
+        booking.status = 'cancelled'
+        booking.cancelled_at = timezone.now()
+        booking.cancellation_reason = serializer.validated_data['reason']
+        booking.cancellation_notes = serializer.validated_data.get('notes', '')
+        booking.save(update_fields=['status', 'cancelled_at', 'cancellation_reason', 'cancellation_notes'])
+        
+        return Response({
+            'detail': 'Booking cancelled.',
+            'booking_ref': booking.booking_ref,
+            'cancelled_at': booking.cancelled_at,
+            'cancellation_reason': booking.cancellation_reason,
+        })

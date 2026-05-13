@@ -10,6 +10,16 @@ class Booking(models.Model):
         ('cancelled', 'Cancelled'),
         ('completed', 'Completed'),
     ]
+    
+    CANCELLATION_REASON_CHOICES = [
+        ('change_of_plans', 'Change of Plans'),
+        ('found_better_deal', 'Found Better Deal'),
+        ('booking_error', 'Booking Error'),
+        ('travel_restrictions', 'Travel Restrictions'),
+        ('emergency', 'Emergency'),
+        ('weather_issues', 'Weather Issues'),
+        ('other', 'Other'),
+    ]
 
     user = models.ForeignKey(
         settings.AUTH_USER_MODEL,
@@ -29,6 +39,16 @@ class Booking(models.Model):
     status = models.CharField(max_length=10, choices=STATUS_CHOICES, default='pending')
     is_featured = models.BooleanField(default=False)
     created_at = models.DateField(auto_now_add=True)
+    
+    # New fields for cancellation tracking
+    cancelled_at = models.DateTimeField(null=True, blank=True)
+    cancellation_reason = models.CharField(
+        max_length=30, 
+        choices=CANCELLATION_REASON_CHOICES, 
+        null=True, 
+        blank=True
+    )
+    cancellation_notes = models.TextField(blank=True, help_text="Additional details about cancellation")
 
     class Meta:
         db_table = 'bookings'
@@ -38,6 +58,7 @@ class Booking(models.Model):
             models.Index(fields=['status', 'created_at']),
             models.Index(fields=['booking_ref']),
             models.Index(fields=['check_in', 'check_out']),
+            models.Index(fields=['cancelled_at']),  # New index for querying cancelled bookings
         ]
 
     def __str__(self):
