@@ -14,7 +14,7 @@ class Amenity(models.Model):
 
 
 class Policy(models.Model):
-    type = models.CharField(max_length=50, help_text="e.g. cancellation, check-in, pets")
+    type = models.CharField(max_length=50, help_text="e.g. cancellation, check_in, pets")
     title = models.CharField(max_length=50)
     description = models.TextField()
 

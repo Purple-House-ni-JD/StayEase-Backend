@@ -1,4 +1,5 @@
 import cloudinary.uploader
+from datetime import timedelta
 from rest_framework import generics, status
 from rest_framework.decorators import action
 from rest_framework.permissions import AllowAny, IsAuthenticated
@@ -89,6 +90,27 @@ class RoomViewSet(ModelViewSet):
         room.image_urls.remove(url)
         room.save(update_fields=['image_urls'])
         return Response({'image_urls': room.image_urls}, status=status.HTTP_200_OK)
+
+    @action(detail=True, methods=['get'], url_path='booked-dates', permission_classes=[AllowAny])
+    def booked_dates(self, request, pk=None):
+        from apps.bookings.models import BookingRoom
+        room = self.get_object()
+        # Get all bookings for this room that are confirmed or pending
+        booking_rooms = BookingRoom.objects.filter(
+            room=room,
+            booking__status__in=['pending', 'confirmed']
+        ).select_related('booking')
+        
+        booked_dates = []
+        for br in booking_rooms:
+            booking = br.booking
+            # Generate list of dates from check_in to check_out - 1
+            current = booking.check_in
+            while current < booking.check_out:
+                booked_dates.append(current.isoformat())
+                current = current + timedelta(days=1)
+        
+        return Response({'booked_dates': booked_dates}, status=status.HTTP_200_OK)
 
 
 # --- Amenity & Policy views ---

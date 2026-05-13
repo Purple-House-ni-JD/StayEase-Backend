@@ -25,7 +25,7 @@ class BookingListSerializer(serializers.ModelSerializer):
     class Meta:
         model = Booking
         fields = [
-            'id', 'booking_ref', 'user_email', 'check_in', 'check_out',
+            'id', 'booking_ref', 'user_email', 'check_in', 'checkin_time', 'check_out', 'checkout_time', 'estimated_arrival_time',
             'nights', 'guest_count', 'total_price', 'status', 'created_at',
         ]
 
@@ -40,7 +40,7 @@ class BookingDetailSerializer(serializers.ModelSerializer):
     class Meta:
         model = Booking
         fields = [
-            'id', 'booking_ref', 'check_in', 'check_out', 'nights',
+            'id', 'booking_ref', 'check_in', 'checkin_time', 'check_out', 'checkout_time', 'estimated_arrival_time', 'nights',
             'guest_count', 'total_price', 'status', 'is_featured',
             'booking_rooms', 'payment_status', 'payment_method', 'created_at',
         ]
@@ -61,6 +61,7 @@ class BookingCreateSerializer(serializers.Serializer):
     )
     check_in = serializers.DateField()
     check_out = serializers.DateField()
+    estimated_arrival_time = serializers.TimeField(required=False, allow_null=True)
     guest_count = serializers.IntegerField(min_value=1)
     payment_method = serializers.ChoiceField(choices=Payment.METHOD_CHOICES)
     guest_details = serializers.DictField(required=False, write_only=True)
@@ -119,6 +120,7 @@ class BookingCreateSerializer(serializers.Serializer):
             booking_ref=generate_booking_ref(),
             check_in=check_in,
             check_out=check_out,
+            estimated_arrival_time=validated_data.get('estimated_arrival_time'),
             guest_count=validated_data['guest_count'],
             total_price=total_price,
             status='pending',
