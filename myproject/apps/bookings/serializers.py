@@ -30,19 +30,38 @@ class BookingListSerializer(serializers.ModelSerializer):
         ]
 
 
+class BookingCancelSerializer(serializers.Serializer):
+    """Serializer for booking cancellation with reason."""
+    reason = serializers.ChoiceField(choices=Booking.CANCELLATION_REASON_CHOICES)
+    notes = serializers.CharField(required=False, allow_blank=True, max_length=500)
+
+    def validate(self, attrs):
+        if self.instance.status not in ['pending', 'confirmed']:
+            raise serializers.ValidationError(
+                f'Cannot cancel a booking with status: {self.instance.status}'
+            )
+        return attrs
+
+
 class BookingDetailSerializer(serializers.ModelSerializer):
     """Full booking detail including rooms and payment."""
     booking_rooms = BookingRoomSerializer(many=True, read_only=True)
     nights = serializers.IntegerField(read_only=True)
     payment_status = serializers.SerializerMethodField()
     payment_method = serializers.SerializerMethodField()
+    
+    # Add cancellation info to detail view
+    cancellation_reason_display = serializers.SerializerMethodField()
+    cancelled_at_formatted = serializers.SerializerMethodField()
 
     class Meta:
         model = Booking
         fields = [
-            'id', 'booking_ref', 'check_in', 'checkin_time', 'check_out', 'checkout_time', 'estimated_arrival_time', 'nights',
-            'guest_count', 'total_price', 'status', 'is_featured',
-            'booking_rooms', 'payment_status', 'payment_method', 'created_at',
+            'id', 'booking_ref', 'check_in', 'checkin_time', 'check_out', 'checkout_time', 
+            'estimated_arrival_time', 'nights', 'guest_count', 'total_price', 'status', 
+            'is_featured', 'booking_rooms', 'payment_status', 'payment_method', 'created_at',
+            'cancelled_at', 'cancellation_reason', 'cancellation_notes', 
+            'cancellation_reason_display', 'cancelled_at_formatted',
         ]
 
     def get_payment_status(self, obj):
@@ -52,6 +71,16 @@ class BookingDetailSerializer(serializers.ModelSerializer):
     def get_payment_method(self, obj):
         payment = getattr(obj, 'payment', None)
         return payment.method if payment else None
+    
+    def get_cancellation_reason_display(self, obj):
+        if obj.cancellation_reason:
+            return dict(Booking.CANCELLATION_REASON_CHOICES).get(obj.cancellation_reason)
+        return None
+    
+    def get_cancelled_at_formatted(self, obj):
+        if obj.cancelled_at:
+            return obj.cancelled_at.strftime("%B %d, %Y at %I:%M %p")
+        return None
 
 
 class BookingCreateSerializer(serializers.Serializer):
